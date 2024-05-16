@@ -167,7 +167,11 @@ int tmin(void) {
  *   Rating: 1
  */
 int isTmax(int x) {
+<<<<<<< HEAD
   return !((x+1) ^ ~x) & !!~x;
+=======
+  return !(~((x + 1) + x) | !(x + 1));
+>>>>>>> ccc9d22a39163d2717787f9ee4d7382ae63f7ae0
 }
 /* 
  * allOddBits - return 1 if all odd-numbered bits in word set to 1
@@ -297,7 +301,11 @@ int howManyBits(int x) {
  *   Rating: 4
  */
 unsigned floatScale2(unsigned uf) {
+<<<<<<< HEAD
 	int exp = (uf >> 23) & 0xff; 
+=======
+	int exp = (uf >> 23) & 0xff; //maybe can delete
+>>>>>>> ccc9d22a39163d2717787f9ee4d7382ae63f7ae0
 	if(exp == 0xff)
 		return uf;
 	if(exp == 0)
@@ -347,9 +355,20 @@ int floatFloat2Int(unsigned uf) {
  */
 unsigned floatPower2(int x) {
   int exp = x + 127;
+<<<<<<< HEAD
   if (exp <= 0)
     return 0;
   if (exp >= 0xFF)
     return 0x7f800000;
   return exp << 23;
 }
+=======
+  // 0
+  if (exp <= 0)
+    return 0;
+  // INF
+  if (exp >= 0xFF)
+    return 0x7f800000;
+  return exp << 23;
+}
+>>>>>>> ccc9d22a39163d2717787f9ee4d7382ae63f7ae0
