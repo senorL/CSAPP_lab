@@ -19,10 +19,124 @@ int is_transpose(int M, int N, int A[N][M], int B[M][N]);
  *     searches for that string to identify the transpose function to
  *     be graded. 
  */
+void transpose_32x32(int M, int N, int A[N][M], int B[M][N])
+{
+    int a, b, c, d, e, f, g, h;
+    for (int i = 0; i < N; i += 8) { 
+        for (int j = 0; j < M; j += 8) { 
+                for (int k = 0;k < 8;++k) {
+                    a = A[i + k][j];
+                    b = A[i + k][j + 1];
+                    c = A[i + k][j + 2];
+                    d = A[i + k][j + 3];
+                    e = A[i + k][j + 4];
+                    f = A[i + k][j + 5];
+                    g = A[i + k][j + 6];
+                    h = A[i + k][j + 7];
+                    B[j + k][i] = a;
+                    B[j + k][i + 1] = b;
+                    B[j + k][i + 2] = c;
+                    B[j + k][i + 3] = d;
+                    B[j + k][i + 4] = e;
+                    B[j + k][i + 5] = f;
+                    B[j + k][i + 6] = g;
+                    B[j + k][i + 7] = h;
+                }
+                // 转置 B
+                for (int k = 0;k < 8;++k) {
+                    // 对角线不用交换
+                    for (int l = 0;l < k;++l) {
+                        a = B[j + k][i + l];
+                        B[j + k][i + l] = B[j + l][i + k];
+                        B[j + l][i + k] = a;
+                    }
+                }
+        }
+    }
+}
+void transpose_64x64(int M, int N, int A[N][M], int B[M][N])
+{
+    int a_0, a_1, a_2, a_3, a_4, a_5, a_6, a_7;
+    for (int i = 0; i < 64; i += 8)
+    {
+        for (int j = 0; j < 64; j += 8)
+        {
+            for (int k = i; k < i + 4; k++)
+            {
+                a_0 = A[k][j + 0];
+                a_1 = A[k][j + 1];
+                a_2 = A[k][j + 2];
+                a_3 = A[k][j + 3];
+                a_4 = A[k][j + 4];
+                a_5 = A[k][j + 5];
+                a_6 = A[k][j + 6];
+                a_7 = A[k][j + 7];
+
+                B[j + 0][k] = a_0;
+                B[j + 1][k] = a_1;
+                B[j + 2][k] = a_2;
+                B[j + 3][k] = a_3;
+                B[j + 0][k + 4] = a_4;
+                B[j + 1][k + 4] = a_5;
+                B[j + 2][k + 4] = a_6;
+                B[j + 3][k + 4] = a_7;
+            }
+            for (int k = j; k < j + 4; k++)
+            {
+                a_0 = B[k][i + 4];
+                a_1 = B[k][i + 5];
+                a_2 = B[k][i + 6];
+                a_3 = B[k][i + 7];
+
+                a_4 = A[i + 4][k];
+                a_5 = A[i + 5][k];
+                a_6 = A[i + 6][k];
+                a_7 = A[i + 7][k];
+
+                B[k][i + 4] = a_4;
+                B[k][i + 5] = a_5;
+                B[k][i + 6] = a_6;
+                B[k][i + 7] = a_7;
+
+                B[k + 4][i + 0] = a_0;
+                B[k + 4][i + 1] = a_1;
+                B[k + 4][i + 2] = a_2;
+                B[k + 4][i + 3] = a_3;
+            }
+            for (int k = i + 4; k < i + 8; k++)
+            {
+                a_4 = A[k][j + 4];
+                a_5 = A[k][j + 5];
+                a_6 = A[k][j + 6];
+                a_7 = A[k][j + 7];
+
+                B[j + 4][k] = a_4;
+                B[j + 5][k] = a_5;
+                B[j + 6][k] = a_6;
+                B[j + 7][k] = a_7;
+            }
+        }
+    }
+}
+void transpose_61x67(int M, int N, int A[N][M], int B[M][N]){
+    for (int i = 0; i < N; i += 16)
+        for (int j = 0; j < M; j += 16)
+            for (int k = i; k < i + 16 && k < N; k++)
+                for (int s = j; s < j + 16 && s < M; s++)
+                    B[s][k] = A[k][s];
+}
+
 char transpose_submit_desc[] = "Transpose submission";
 void transpose_submit(int M, int N, int A[N][M], int B[M][N])
 {
-}
+    if (M == 32 && N == 32)
+        transpose_32x32(M, N, A, B);
+    if (M == 64 && N == 64)
+        transpose_64x64(M, N, A, B);
+    if (M == 61 && N == 67)
+        transpose_61x67(M, N, A, B);
+}    
+
 
 /* 
  * You can define additional transpose functions below. We've defined
