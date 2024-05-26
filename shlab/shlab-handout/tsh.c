@@ -273,6 +273,18 @@ int parseline(const char *cmdline, char **argv)
  */
 int builtin_cmd(char **argv) 
 {
+    if(!strcmp(argv[0], "quit"))
+        exit(0);
+    if(!strcmp(argv[0], "fg") || !strcmp(argv[0], "bg")) {
+        do_bgfg(argv);
+        return 1;
+    }
+    if (!strcmp(argv[0], "jobs")) {
+        listjobs(jobs);
+        return 1;
+    }
+    if (!strcmp(argv[0], "&"))
+        return 1;
     return 0;     /* not a builtin command */
 }
 
@@ -281,6 +293,45 @@ int builtin_cmd(char **argv)
  */
 void do_bgfg(char **argv) 
 {
+    struct job_t *job; //处理的job
+    int id;
+    int state;
+    if(!strcmp(argv[0], "fg"))
+        state = FG;
+    else if(!strcmp(argv[0], "bg"))
+        state = BG;
+    if(argv[1] == NULL) { //无参数
+        printf("%s command requires PID or %%jobid argument\n", argv[0]);
+        return;
+    }
+    if (argv[1][0] == '%') {
+        if(sscanf(&argv[1][1], "%d", &id) > 0) {
+            job = getjobjid(jobs, id);
+            if(job == NULL) {
+                printf("%s: No such job\n", id);
+                return;
+            }
+        }
+    }
+    else if (!isdigit(argv[1][0])) {
+        printf("%s: argument must be a PID or %%jobid\n", argv[0]);
+        return;
+    }
+    else {
+        id = atoi(argv[1]);
+        job = getjobpid(jobs, id);
+        if(job == NULL) {
+            printf("(%d): No such process\n", id);
+            return;
+        }
+    }
+    //重启进程
+    kill(-job->pid, SIGCONT);
+    job->state = state;
+    if(state == FG)
+        waitfg(job->pid);
+    else
+        printf("[%d] (%d) %s", job->jid, job->pid, job->cmdline);
     return;
 }
 
