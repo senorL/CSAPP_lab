@@ -1,7 +1,7 @@
 /* 
  * tsh - A tiny shell program with job control
  * 
- * <Put your name and login ID here>
+ * senorL
  */
 #include <stdio.h>
 #include <stdlib.h>
@@ -165,6 +165,48 @@ int main(int argc, char **argv)
 */
 void eval(char *cmdline) 
 {
+    char *argv[MAXARGS]; // Argument list execve()
+    char buf[MAXLINE]; // Holds modified command line
+    int bg; // Should the job run in the background?
+    pid_t pid; // Process id
+
+    strcpy(buf, cmdline);
+    bg = parseline(buf, argv) ? BG : FG;
+    if(argv[0] == NULL)
+        return; // Ignore empty lines
+    sigset_t mask_all, mask_one, prev_one;
+    Sigfillset(&mask_all); //初始化mask_all为包含所有信号
+    Sigemptyset(&mask_one); //初始化mask_one为空集合
+    Sigaddset(&mask_one, SIGCHLD); //将SIGCHLD信号添加到mask_one信号集
+
+    if(!builtin_cmd(argv)) {
+        // 阻塞SIGCHLD信号并保存当前信号屏蔽集状态
+        Sigprocmask(SIG_BLOCK, &mask_one, &prev_one); 
+        if((pid = fork()) == 0) {
+            //子进程默认继承父进程的mask，这里要恢复
+			sigprocmask(SIG_SETMASK, &prev_one, NULL);
+            //设置子进程的组ID
+            setpgid(0, 0); 
+            if(execve(argv[0], argv, environ) < 0) {
+                printf("%s: Command not found.\n", argv[0]);
+                exit(0);
+            }
+        }
+        if(bg == FG) {
+            sigprocmask(SIG_BLOCK, &mask_all, NULL);
+            addjob(jobs, pid, FG, cmdline);
+            sigprocmask(SIG_SETMASK, &mask_one, NULL);
+            waitfg(pid);
+            }
+        else {
+            sigprocmask(SIG_BLOCK, &mask_all, NULL);
+            addjob(jobs, pid, BG, cmdline);
+            sigprocmask(SIG_SETMASK, &mask_one, NULL);
+            printf("[%d] (%d) %s", pid2jid(pid), pid, cmdline);
+            }
+        sigprocmask(SIG_SETMASK, &prev_one, NULL);
+        }
+
     return;
 }
 
