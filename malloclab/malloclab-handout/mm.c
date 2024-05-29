@@ -24,11 +24,11 @@
  ********************************************************/
 team_t team = {
     /* Team name */
-    "ateam",
+    "senorL",
     /* First member's full name */
-    "Harry Bovik",
+    "senorL",
     /* First member's email address */
-    "bovik@cs.cmu.edu",
+    "senor_l@foxmail.com",
     /* Second member's full name (leave blank if none) */
     "",
     /* Second member's email address (leave blank if none) */
@@ -41,6 +41,56 @@ team_t team = {
 /* rounds up to the nearest multiple of ALIGNMENT */
 #define ALIGN(size) (((size) + (ALIGNMENT-1)) & ~0x7)
 
+#define WSIZE 4
+#define DSIZE 8
+#define CHUNKSIZE (1<<12)
+
+#define MAX(x, y) ((x) > (y) ? (x) : (y))
+#define MIN(x, y) ((x) < (y) ? (x) : (y))
+
+#define PACK(size, alloc) ((size) | (alloc))
+#define PACK_ALL(size, prev_alloc, alloc) ((size) | (prev_alloc) | (alloc)
+
+#define GET(p) (*(unsigned*)(p))
+#define PUT(p, val) (*(unsigned*)(p) = (val))
+
+#define GET_SIZE(p) (GET(p) & ~0x7)
+#define GET_ALLOC(p) (GET(p) & 0x1)
+#define GET_PREV_ALLOC(p) (GET(p) & 0x2)
+#define SET_ALLOC(p) (GET(p) |= 0x1)
+#define SET_FREE(p) (GET(p) &= ~0x1)
+#define SET_PREV_ALLOC(p) (GET(p) |= 0x2)
+#define SET_PREV_FREE(p) (GET(p) &= ~0x2)
+
+#define HDRP(bp) ((char*)(bp) - WSIZE)
+#define FTRP(bp) ((char*)(bp) + GET_SIZE(HDRP(bp)) - DSIZE)
+
+#define PREV_BLKP(bp) ((char*)(bp) - GET_SIZE((char*)(bp) - DSIZE))
+#define NEXT_BLKP(bp) ((char*)(bp) + GET_SIZE(HDRP(bp)))
+
+static char* heap_listp = 0;
+
+#define FREE_LIST_SIZE 15
+static char** free_list;
+
+#define PREV_NODE(bp)       ((char *)(mem_heap_lo() + *(unsigned*)(bp)))
+#define NEXT_NODE(bp)       ((char *)(mem_heap_lo() + *(unsigned*)(bp + WSIZE)))
+#define SET_NODE_PREV(bp,val)   (*(unsigned*)(bp) = ((unsigned)(long)val))
+#define SET_NODE_NEXT(bp,val)   (*(unsigned*)((char *)bp + WSIZE) = ((unsigned)(long)val))
+
+#define CHECK_ALIGN(p) (ALIGN(p) == (size_t)p)
+static inline void get_range(size_t index);
+static size_t low_range;
+static size_t high_range;
+
+static inline void* extend_heap(size_t words);
+static inline void* coalesce(void* bp, size_t size);
+static inline size_t get_index(size_t size);
+static inline size_t adjust_alloc_size(size_t size);
+static inline void* find_fit(size_t asize);
+static inline void place(void* bp, size_t size);
+static inline void insert_node(void* bp, size_t size);
+static inline void delete_node(void* bp);
 
 #define SIZE_T_SIZE (ALIGN(sizeof(size_t)))
 
